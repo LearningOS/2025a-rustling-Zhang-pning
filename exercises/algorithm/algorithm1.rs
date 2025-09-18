@@ -6,7 +6,7 @@
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
-use std::vec::*;
+
 
 #[derive(Debug)]
 struct Node<T> {
@@ -69,15 +69,45 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+}
+
+impl<T: PartialOrd + Clone> LinkedList<T> {
+    pub fn merge(list_a: LinkedList<T>, list_b: LinkedList<T>) -> Self 
+    {
+        let mut merged_list = LinkedList::new();
+        let mut a_current = list_a.start;
+        let mut b_current = list_b.start;
+
+        while a_current.is_some() || b_current.is_some() {
+            match (a_current, b_current) {
+                (Some(a_ptr), Some(b_ptr)) => {
+                    let a_val = unsafe { &(*a_ptr.as_ptr()).val };
+                    let b_val = unsafe { &(*b_ptr.as_ptr()).val };
+                    
+                    if a_val <= b_val {
+                        merged_list.add(a_val.clone());
+                        a_current = unsafe { (*a_ptr.as_ptr()).next };
+                    } else {
+                        merged_list.add(b_val.clone());
+                        b_current = unsafe { (*b_ptr.as_ptr()).next };
+                    }
+                }
+                (Some(a_ptr), None) => {
+                    let a_val = unsafe { &(*a_ptr.as_ptr()).val };
+                    merged_list.add(a_val.clone());
+                    a_current = unsafe { (*a_ptr.as_ptr()).next };
+                }
+                (None, Some(b_ptr)) => {
+                    let b_val = unsafe { &(*b_ptr.as_ptr()).val };
+                    merged_list.add(b_val.clone());
+                    b_current = unsafe { (*b_ptr.as_ptr()).next };
+                }
+                (None, None) => break,
+            }
         }
-	}
+
+        merged_list
+    }
 }
 
 impl<T> Display for LinkedList<T>
